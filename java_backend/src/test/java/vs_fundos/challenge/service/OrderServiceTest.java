@@ -39,7 +39,7 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Test
-    void shouldCreateOrderSuccessfullyAndPublishEvent() {
+    void createOrder_shouldCreateOrderSuccessfullyAndPublishEvent() {
         OrderDTO inputDto = OrderDTO.builder()
                 .orderNumber("ORD-123")
                 .totalValue(new BigDecimal("150.75"))
@@ -63,7 +63,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenSavingFailsOnCreateOrder() {
+    void createOrder_shouldThrowExceptionWhenSavingFailsOnCreateOrder() {
         OrderDTO inputDto = OrderDTO.builder().orderNumber("ORD-FAIL").build();
         when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("Database connection failed"));
 
@@ -75,7 +75,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldUpdateOrderSuccessfully() {
+    void updateById_shouldUpdateOrderSuccessfully() {
         Long orderId = 1L;
         OrderDTO orderDetailsDto = OrderDTO.builder()
                 .totalValue(new BigDecimal("99.99"))
@@ -112,7 +112,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldThrowOrderNotFoundExceptionWhenUpdatingNonExistentOrder() {
+    void updateById_shouldThrowOrderNotFoundExceptionWhenUpdatingNonExistentOrder() {
         Long nonExistentId = 99L;
         OrderDTO orderDetailsDto = OrderDTO.builder().orderNumber("ORD-NON-EXISTENT").build();
         when(orderRepository.findById(nonExistentId)).thenReturn(Optional.empty());
@@ -126,7 +126,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldCreateRandomOrderSuccessfullyAndPublishEvent() {
+    void createRandomOrder_shouldCreateRandomOrderSuccessfullyAndPublishEvent() {
         OrderDTO orderMockDTO = OrderDTO.builder()
                 .orderNumber("MOCKED")
                 .totalValue(BigDecimal.valueOf(1))
@@ -147,7 +147,7 @@ public class OrderServiceTest {
         assertEquals(orderMockDTO, capturedEvent.getOrderDTO());
     }
     @Test
-    void shouldThrowExceptionWhenOrderCreationFails() {
+    void createRandomOrder_shouldThrowExceptionWhenOrderCreationFails() {
         String fixedOrderNumber = "MOCKED-FAILED-ORDER";
         OrderDTO mockOrderDTO = OrderDTO.builder().build();
         mockOrderDTO.setOrderNumber(fixedOrderNumber);
@@ -165,7 +165,7 @@ public class OrderServiceTest {
         verify(eventPublisher, never()).publishEvent(any(OrderCreatedEvent.class));
     }
     @Test
-    void shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
+    void processOrder_shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
         String orderNumber = "NON-EXISTENT-ORDER";
         when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(null);
 
@@ -178,7 +178,7 @@ public class OrderServiceTest {
         verify(orderRepository, never()).save(any(Order.class));
     }
     @Test
-    void shouldThrowOrderAlreadyProcessedExceptionWhenOrderIsAlreadyProcessed() {
+    void processOrder_shouldThrowOrderAlreadyProcessedExceptionWhenOrderIsAlreadyProcessed() {
         String orderNumber = "ALREADY-PROCESSED-ORDER";
         Order order = new Order();
         order.setOrderNumber(orderNumber);
@@ -194,7 +194,7 @@ public class OrderServiceTest {
         verify(orderRepository, never()).save(any(Order.class));
     }
     @Test
-    void shouldProcessOrderSuccessfullyWhenStatusIsUnprocessed() {
+    void processOrder_shouldProcessOrderSuccessfullyWhenStatusIsUnprocessed() {
         String orderNumber = "ORD-001";
         Order order = new Order();
         order.setOrderNumber(orderNumber);
