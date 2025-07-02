@@ -28,6 +28,31 @@ public class OrderControllerTest {
     private OrderController orderController;
 
     @Test
+    void getOrder_shouldReturnOkStatusAndOrderDTO_whenServiceSucceeds() {
+        Long orderId = 1L;
+        OrderDTO mockedOrder = OrderDTO.builder().orderNumber("ORDER-01").build();
+        when(orderService.getOrderById(orderId)).thenReturn(mockedOrder);
+
+        ResponseEntity<OrderDTO> responseEntity = orderController.getOrderById(orderId);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(mockedOrder, responseEntity.getBody());
+        verify(orderService, times(1)).getOrderById(orderId);
+    }
+
+    @Test
+    void getOrder_shouldPropagateOrderNotFoundException_whenOrderDoesNotExist() {
+        Long orderNonExistentId = 1L;
+        OrderDTO orderDetails = OrderDTO.builder().orderNumber("ORDER-01").build();
+        doThrow(new OrderNotFoundException(String.valueOf(orderNonExistentId))).when(orderService).getOrderById(orderNonExistentId);
+
+        OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> orderController.getOrderById(orderNonExistentId));
+
+        assertEquals("Order not found with number: " + orderNonExistentId, thrown.getMessage());
+        verify(orderService, times(1)).getOrderById(eq(orderNonExistentId));
+    }
+
+    @Test
     void createOrder_shouldReturnCreatedStatusAndOrderDTO_whenServiceSucceeds() {
         OrderDTO expectedOrderDTO = OrderDTO.builder().orderNumber("ORDER-1").build();
         when(orderService.createOrder(expectedOrderDTO)).thenReturn(expectedOrderDTO);
