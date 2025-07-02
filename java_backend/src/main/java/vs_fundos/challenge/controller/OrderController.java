@@ -17,11 +17,26 @@ import vs_fundos.challenge.service.OrderService;
 public class OrderController {
     private final OrderService orderService;
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get order by id.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Get order  successfully"),
+            @ApiResponse(responseCode = "404", description = "Order not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public  ResponseEntity<OrderDTO> getOrderById(
+            @Parameter(description = "ID of the order to be updated")
+            @PathVariable Long id
+    ) {
+        OrderDTO orderDTO = orderService.getOrderById(id);
+        return new ResponseEntity<>(orderDTO, HttpStatus.OK);
+    }
+
     @PostMapping("/")
     @Operation(summary = "Create a new order.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Order created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request payload"), // Supondo um ErrorDTO
+            @ApiResponse(responseCode = "400", description = "Invalid request payload"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
@@ -49,7 +64,8 @@ public class OrderController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<OrderDTO> updateOrder(
-            @Parameter(description = "ID of the order to be updated") @PathVariable Long id,
+            @Parameter(description = "ID of the order to be updated")
+            @PathVariable Long id,
             @RequestBody OrderDTO orderDetails
     ) {
         OrderDTO orderDTO = orderService.updateById(id, orderDetails);
