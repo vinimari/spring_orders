@@ -25,7 +25,7 @@ public class OrderController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public  ResponseEntity<OrderDTO> getOrderById(
-            @Parameter(description = "ID of the order to be updated")
+            @Parameter(description = "ID of the order to be retrieved")
             @PathVariable Long id
     ) {
         OrderDTO orderDTO = orderService.getOrderById(id);
