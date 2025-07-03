@@ -39,6 +39,35 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Test
+    void getOrderById_shouldRetrieveOrderSuccesfully() {
+        Long orderId = 1L;
+        OrderDTO mockedDTO = OrderDTO.builder().orderNumber("ORDER-01").build();
+        Order mockedOrder = new Order();
+        mockedOrder.setOrderNumber("ORDER-01");
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(mockedOrder));
+        when(convert.orderModelToDTO(mockedOrder)).thenReturn(mockedDTO);
+
+        OrderDTO resultDTO = orderService.getOrderById(orderId);
+
+        verify(orderRepository, times(1)).findById(orderId);
+        verify(convert, times(1)).orderModelToDTO(mockedOrder);
+        assertEquals(resultDTO, mockedDTO);
+    }
+
+    @Test
+    void getOrderById_shouldThrowOrderNotFoundExceptionWhenRetrieveNonExistentOrder() {
+        Long orderId = 1L;
+        when(orderRepository.findById(orderId)).thenThrow(new OrderNotFoundException(orderId));
+
+        OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> {
+            orderService.getOrderById(orderId);
+        });
+
+        assertEquals("Order not found with ID: " + orderId, thrown.getMessage());
+        verify(convert, never()).orderModelToDTO(any());
+    }
+
+    @Test
     void createOrder_shouldCreateOrderSuccessfullyAndPublishEvent() {
         OrderDTO inputDto = OrderDTO.builder()
                 .orderNumber("ORD-123")
@@ -121,7 +150,7 @@ public class OrderServiceTest {
             orderService.updateById(nonExistentId, orderDetailsDto);
         });
 
-        assertThat(thrown.getMessage()).contains(orderDetailsDto.getOrderNumber());
+        assertThat(thrown.getMessage()).contains(String.valueOf(nonExistentId));
         verify(orderRepository, never()).save(any());
     }
 
