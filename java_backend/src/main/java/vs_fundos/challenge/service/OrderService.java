@@ -17,7 +17,6 @@ import vs_fundos.challenge.util.Convert;
 import vs_fundos.challenge.util.OrderFactory;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 
 @Service
@@ -31,7 +30,7 @@ public class OrderService {
 
     @Transactional
     public OrderDTO getOrderById(Long id) {
-        Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(String.valueOf(id)));
+        Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         return convert.orderModelToDTO(order);
     }
 
@@ -78,7 +77,7 @@ public class OrderService {
 
     public OrderDTO updateById(Long id, OrderDTO orderDetails) {
         Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException(orderDetails.getOrderNumber()));
+                .orElseThrow(() -> new OrderNotFoundException(id));
 
         existingOrder.setTotalValue(orderDetails.getTotalValue());
         existingOrder.setStatus(orderDetails.getStatus());
