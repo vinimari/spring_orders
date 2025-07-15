@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
-import vs_fundos.challenge.controller.OrderController;
 import vs_fundos.challenge.dto.OrderDTO;
 import jakarta.transaction.Transactional;
 import vs_fundos.challenge.enums.OrderStatus;
@@ -18,7 +17,6 @@ import vs_fundos.challenge.util.Convert;
 import vs_fundos.challenge.util.OrderFactory;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 
 @Service
@@ -29,6 +27,12 @@ public class OrderService {
     private final OrderFactory orderFactory;
     private final Convert convert;
     private static final Logger logger = LogManager.getLogger(OrderService.class);
+
+    @Transactional
+    public OrderDTO getOrderById(Long id) {
+        Order order = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+        return convert.orderModelToDTO(order);
+    }
 
     @Transactional
     public OrderDTO createRandomOrder() {
@@ -73,7 +77,7 @@ public class OrderService {
 
     public OrderDTO updateById(Long id, OrderDTO orderDetails) {
         Order existingOrder = orderRepository.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException(orderDetails.getOrderNumber()));
+                .orElseThrow(() -> new OrderNotFoundException(id));
 
         existingOrder.setTotalValue(orderDetails.getTotalValue());
         existingOrder.setStatus(orderDetails.getStatus());

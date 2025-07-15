@@ -1,11 +1,9 @@
 package vs_fundos.challenge.controller;
 
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +24,31 @@ public class OrderControllerTest {
     private OrderService orderService;
     @InjectMocks
     private OrderController orderController;
+
+    @Test
+    void getOrder_shouldReturnOkStatusAndOrderDTO_whenServiceSucceeds() {
+        Long orderId = 1L;
+        OrderDTO mockedOrder = OrderDTO.builder().orderNumber("ORDER-01").build();
+        when(orderService.getOrderById(orderId)).thenReturn(mockedOrder);
+
+        ResponseEntity<OrderDTO> responseEntity = orderController.getOrderById(orderId);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(mockedOrder, responseEntity.getBody());
+        verify(orderService, times(1)).getOrderById(orderId);
+    }
+
+    @Test
+    void getOrder_shouldPropagateOrderNotFoundException_whenOrderDoesNotExist() {
+        Long orderNonExistentId = 1L;
+        OrderDTO orderDetails = OrderDTO.builder().orderNumber("ORDER-01").build();
+        doThrow(new OrderNotFoundException(orderNonExistentId)).when(orderService).getOrderById(orderNonExistentId);
+
+        OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> orderController.getOrderById(orderNonExistentId));
+
+        assertEquals("Order not found with ID: " + orderNonExistentId, thrown.getMessage());
+        verify(orderService, times(1)).getOrderById(eq(orderNonExistentId));
+    }
 
     @Test
     void createOrder_shouldReturnCreatedStatusAndOrderDTO_whenServiceSucceeds() {
@@ -87,14 +110,14 @@ public class OrderControllerTest {
                 .status(OrderStatus.PROCESSED)
                 .orderDateUpdated(LocalDateTime.MIN)
                 .build();
-        doThrow(new OrderNotFoundException(orderDetails.getOrderNumber()))
+        doThrow(new OrderNotFoundException(orderNonExistentId))
                 .when(orderService).updateById(eq(orderNonExistentId), any(OrderDTO.class));
 
         OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> {
             orderController.updateOrder(orderNonExistentId, orderDetails);
         });
 
-        assertEquals("Order not found with number: " + orderDetails.getOrderNumber(), thrown.getMessage());
+        assertEquals("Order not found with ID: " + orderNonExistentId, thrown.getMessage());
         verify(orderService, times(1)).updateById(eq(orderNonExistentId), eq(orderDetails));
     }
 

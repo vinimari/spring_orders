@@ -39,7 +39,36 @@ public class OrderServiceTest {
     private OrderService orderService;
 
     @Test
-    void shouldCreateOrderSuccessfullyAndPublishEvent() {
+    void getOrderById_shouldRetrieveOrderSuccesfully() {
+        Long orderId = 1L;
+        OrderDTO mockedDTO = OrderDTO.builder().orderNumber("ORDER-01").build();
+        Order mockedOrder = new Order();
+        mockedOrder.setOrderNumber("ORDER-01");
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(mockedOrder));
+        when(convert.orderModelToDTO(mockedOrder)).thenReturn(mockedDTO);
+
+        OrderDTO resultDTO = orderService.getOrderById(orderId);
+
+        verify(orderRepository, times(1)).findById(orderId);
+        verify(convert, times(1)).orderModelToDTO(mockedOrder);
+        assertEquals(resultDTO, mockedDTO);
+    }
+
+    @Test
+    void getOrderById_shouldThrowOrderNotFoundExceptionWhenRetrieveNonExistentOrder() {
+        Long orderId = 1L;
+        when(orderRepository.findById(orderId)).thenThrow(new OrderNotFoundException(orderId));
+
+        OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> {
+            orderService.getOrderById(orderId);
+        });
+
+        assertEquals("Order not found with ID: " + orderId, thrown.getMessage());
+        verify(convert, never()).orderModelToDTO(any());
+    }
+
+    @Test
+    void createOrder_shouldCreateOrderSuccessfullyAndPublishEvent() {
         OrderDTO inputDto = OrderDTO.builder()
                 .orderNumber("ORD-123")
                 .totalValue(new BigDecimal("150.75"))
@@ -63,7 +92,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenSavingFailsOnCreateOrder() {
+    void createOrder_shouldThrowExceptionWhenSavingFailsOnCreateOrder() {
         OrderDTO inputDto = OrderDTO.builder().orderNumber("ORD-FAIL").build();
         when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("Database connection failed"));
 
@@ -75,7 +104,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldUpdateOrderSuccessfully() {
+    void updateById_shouldUpdateOrderSuccessfully() {
         Long orderId = 1L;
         OrderDTO orderDetailsDto = OrderDTO.builder()
                 .totalValue(new BigDecimal("99.99"))
@@ -112,7 +141,7 @@ public class OrderServiceTest {
     }
 
     @Test
-    void shouldThrowOrderNotFoundExceptionWhenUpdatingNonExistentOrder() {
+    void updateById_shouldThrowOrderNotFoundExceptionWhenUpdatingNonExistentOrder() {
         Long nonExistentId = 99L;
         OrderDTO orderDetailsDto = OrderDTO.builder().orderNumber("ORD-NON-EXISTENT").build();
         when(orderRepository.findById(nonExistentId)).thenReturn(Optional.empty());
@@ -121,12 +150,12 @@ public class OrderServiceTest {
             orderService.updateById(nonExistentId, orderDetailsDto);
         });
 
-        assertThat(thrown.getMessage()).contains(orderDetailsDto.getOrderNumber());
+        assertThat(thrown.getMessage()).contains(String.valueOf(nonExistentId));
         verify(orderRepository, never()).save(any());
     }
 
     @Test
-    void shouldCreateRandomOrderSuccessfullyAndPublishEvent() {
+    void createRandomOrder_shouldCreateRandomOrderSuccessfullyAndPublishEvent() {
         OrderDTO orderMockDTO = OrderDTO.builder()
                 .orderNumber("MOCKED")
                 .totalValue(BigDecimal.valueOf(1))
@@ -147,7 +176,7 @@ public class OrderServiceTest {
         assertEquals(orderMockDTO, capturedEvent.getOrderDTO());
     }
     @Test
-    void shouldThrowExceptionWhenOrderCreationFails() {
+    void createRandomOrder_shouldThrowExceptionWhenOrderCreationFails() {
         String fixedOrderNumber = "MOCKED-FAILED-ORDER";
         OrderDTO mockOrderDTO = OrderDTO.builder().build();
         mockOrderDTO.setOrderNumber(fixedOrderNumber);
@@ -165,7 +194,7 @@ public class OrderServiceTest {
         verify(eventPublisher, never()).publishEvent(any(OrderCreatedEvent.class));
     }
     @Test
-    void shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
+    void processOrder_shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
         String orderNumber = "NON-EXISTENT-ORDER";
         when(orderRepository.findByOrderNumber(orderNumber)).thenReturn(null);
 
@@ -178,7 +207,7 @@ public class OrderServiceTest {
         verify(orderRepository, never()).save(any(Order.class));
     }
     @Test
-    void shouldThrowOrderAlreadyProcessedExceptionWhenOrderIsAlreadyProcessed() {
+    void processOrder_shouldThrowOrderAlreadyProcessedExceptionWhenOrderIsAlreadyProcessed() {
         String orderNumber = "ALREADY-PROCESSED-ORDER";
         Order order = new Order();
         order.setOrderNumber(orderNumber);
@@ -194,7 +223,7 @@ public class OrderServiceTest {
         verify(orderRepository, never()).save(any(Order.class));
     }
     @Test
-    void shouldProcessOrderSuccessfullyWhenStatusIsUnprocessed() {
+    void processOrder_shouldProcessOrderSuccessfullyWhenStatusIsUnprocessed() {
         String orderNumber = "ORD-001";
         Order order = new Order();
         order.setOrderNumber(orderNumber);
