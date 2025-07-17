@@ -1,7 +1,10 @@
 package vs_fundos.challenge.service;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,12 +14,14 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import vs_fundos.challenge.dto.OrderDTO;
+import vs_fundos.challenge.exception.JsonConvertionException;
 import vs_fundos.challenge.util.Convert;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 
@@ -47,11 +52,11 @@ public class OrderKafkaIntegrationTest {
     private OrderService orderService;
     @Autowired
     private Convert convert;
+    @Autowired
+    private OrderConsumerService orderConsumerService;
 
     @BeforeEach
-    void setUp() {
-        Mockito.reset(orderService);
-    }
+    void setUp() { Mockito.reset(orderService); }
 
     @Test
     void shouldSendAndReceiveMessageSuccessfully() {
@@ -75,21 +80,26 @@ public class OrderKafkaIntegrationTest {
     }
 
     @Test
-    void shouldProcessMultipleMessagesSuccessfully() {
-        OrderDTO order1 = OrderDTO.builder().orderNumber("ORDER-01").build();
-        OrderDTO order2 = OrderDTO.builder().orderNumber("ORDER-02").build();
-        OrderDTO order3 = OrderDTO.builder().orderNumber("ORDER-03").build();
-        List<OrderDTO> orders = List.of(order1, order2, order3);
+    void shouldThrowJsonConvertionExceptionForMalformedMessage() {
+        String malformedMessage = "{\"orderNumber\": \"ORDER-02\", \"status\": ";
 
-        orders.forEach(order -> {
-            String payload = convert.objectToJson(order);
-            producerService.sendMessage(payload);
+        JsonConvertionException thrown = assertThrows(JsonConvertionException.class, () -> {
+            orderConsumerService.listen(malformedMessage);
         });
 
+        assertTrue(thrown.getMessage().contains("Error converting JSON to DTO: "));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ORDER-01", "ORDER-02", "ORDER-03"})
+    void shouldProcessMultipleMessagesSuccessfully(String orderNumber) {
+        OrderDTO order = OrderDTO.builder().orderNumber(orderNumber).build();
+
+        String payload = convert.objectToJson(order);
+        producerService.sendMessage(payload);
+
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
-            verify(orderService, times(1)).processOrder("ORDER-01");
-            verify(orderService, times(1)).processOrder("ORDER-02");
-            verify(orderService, times(1)).processOrder("ORDER-03");
+            verify(orderService, times(1)).processOrder(orderNumber);
         });
     }
 }
