@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import vs_fundos.challenge.dto.OrderDTO;
+import vs_fundos.challenge.exception.JsonConvertionException;
 
 
 @Service
@@ -24,6 +25,7 @@ public class OrderConsumerService {
             orderService.processOrder(orderDTO.getOrderNumber());
         } catch (Exception e) {
             logger.error("Error processing Kafka message: {}", e.getMessage(), e);
+            throw new JsonConvertionException("Error converting JSON to DTO: ", e);
         }
     }
 }
