@@ -66,6 +66,15 @@ public class OrderResponseAdviceTest {
     }
 
     @Test
+    void beforeBodyWrite_shouldReturnBody_whenBodyIsNotOrderDTO() throws Exception {
+        String nonOrderDTOBody = "This is a string instead of an OrderDTO";
+
+        Object result = orderResponseAdvice.beforeBodyWrite(nonOrderDTOBody, null, null, null, null, null);
+
+        assertEquals(nonOrderDTOBody, result);
+    }
+
+    @Test
     void supports_shouldReturnTrue_forResponseEntityWithOrderDTO() throws NoSuchMethodException {
         Method method = TestController.class.getMethod("getOrderAsResponseEntity");
         MethodParameter methodParameter = new MethodParameter(method, -1);
