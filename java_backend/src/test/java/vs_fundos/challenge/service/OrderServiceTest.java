@@ -11,6 +11,7 @@ import vs_fundos.challenge.dto.OrderDTO;
 import vs_fundos.challenge.enums.OrderStatus;
 import vs_fundos.challenge.event.OrderCreatedEvent;
 import vs_fundos.challenge.exception.OrderAlreadyProcessedException;
+import vs_fundos.challenge.exception.OrderCreationException;
 import vs_fundos.challenge.exception.OrderNotFoundException;
 import vs_fundos.challenge.model.Order;
 import vs_fundos.challenge.repository.OrderRepository;
@@ -182,17 +183,18 @@ public class OrderServiceTest {
         mockOrderDTO.setOrderNumber(fixedOrderNumber);
         mockOrderDTO.setStatus(OrderStatus.UNPROCESSED);
         when(orderFactory.createRandomOrder()).thenReturn(mockOrderDTO);
-        when(orderRepository.save(any(Order.class))).thenThrow(new RuntimeException("Database error during save"));
+        when(orderRepository.save(any(Order.class))).thenThrow(new OrderCreationException("Database error during save", new Exception()));
 
         RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
             orderService.createRandomOrder();
         });
 
-        assertTrue(thrown.getMessage().contains("Database error during save"));
+        assertTrue(thrown.getMessage().contains("Failed to save random order"));
         verify(orderFactory, times(1)).createRandomOrder();
         verify(orderRepository, times(1)).save(any(Order.class));
         verify(eventPublisher, never()).publishEvent(any(OrderCreatedEvent.class));
     }
+
     @Test
     void processOrder_shouldThrowOrderNotFoundExceptionWhenOrderDoesNotExist() {
         String orderNumber = "NON-EXISTENT-ORDER";
