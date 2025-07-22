@@ -11,6 +11,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 import vs_fundos.challenge.dto.OrderDTO;
+import vs_fundos.challenge.exception.ResponseEncryptionException;
 import vs_fundos.challenge.util.Cryptography;
 
 @ControllerAdvice
@@ -33,7 +34,8 @@ public class OrderResponseAdvice implements ResponseBodyAdvice<Object> {
             try {
                 encryptedOrderNumber = cryptography.encrypt(originalOrderNumber);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                String errorMessage = "Failed to encrypt the order number: " + originalOrderNumber;
+                throw new ResponseEncryptionException(errorMessage, e);
             }
             orderDTO.setOrderNumber(encryptedOrderNumber);
             return orderDTO;

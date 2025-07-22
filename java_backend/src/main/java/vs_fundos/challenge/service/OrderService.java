@@ -8,8 +8,7 @@ import vs_fundos.challenge.dto.OrderDTO;
 import jakarta.transaction.Transactional;
 import vs_fundos.challenge.enums.OrderStatus;
 import vs_fundos.challenge.event.OrderCreatedEvent;
-import vs_fundos.challenge.exception.OrderAlreadyProcessedException;
-import vs_fundos.challenge.exception.OrderNotFoundException;
+import vs_fundos.challenge.exception.*;
 import vs_fundos.challenge.model.Order;
 import org.springframework.stereotype.Service;
 import vs_fundos.challenge.repository.OrderRepository;
@@ -37,7 +36,7 @@ public class OrderService {
     @Transactional
     public OrderDTO createRandomOrder() {
         OrderDTO orderDTO = orderFactory.createRandomOrder();
-        logger.info("Starting order creation: {}", orderDTO.getOrderNumber());
+        logger.info("Starting random order creation: {}", orderDTO.getOrderNumber());
         Order order = new Order();
         order.setOrderNumber(orderDTO.getOrderNumber());
         order.setTotalValue(orderDTO.getTotalValue());
@@ -46,11 +45,11 @@ public class OrderService {
         order.setOrderDateUpdated(orderDTO.getOrderDateUpdated());
         try {
             orderRepository.save(order);
-            logger.info("Order created successfully: {}", orderDTO.getOrderNumber());
         } catch (Exception e) {
-            logger.error("Failed to save order {}, Error: {}", orderDTO.getOrderNumber(), e.getMessage());
-            throw e;
+            logger.error("Failed to save random order {}, Error: {}", orderDTO.getOrderNumber(), e.getMessage());
+            throw new OrderCreationException("Failed to save random order: " + orderDTO.getOrderNumber(), e);
         }
+        logger.info("Random order created successfully: {}", orderDTO.getOrderNumber());
         eventPublisher.publishEvent(new OrderCreatedEvent(orderDTO));
         return orderDTO;
     }
@@ -66,23 +65,30 @@ public class OrderService {
         order.setOrderDateUpdated(LocalDateTime.now());
         try {
             orderRepository.save(order);
-            logger.info("Order created successfully: {}", orderDTO.getOrderNumber());
         } catch (Exception e) {
             logger.error("Failed to save order {}, Error: {}", orderDTO.getOrderNumber(), e.getMessage());
-            throw e;
+            throw new OrderCreationException("Failed to save order: " + orderDTO.getOrderNumber(), e);
         }
+        logger.info("Order created successfully: {}", orderDTO.getOrderNumber());
         eventPublisher.publishEvent(new OrderCreatedEvent(orderDTO));
         return orderDTO;
     }
 
     public OrderDTO updateById(Long id, OrderDTO orderDetails) {
+        logger.info("Starting order update: {}", id);
         Order existingOrder = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
-
         existingOrder.setTotalValue(orderDetails.getTotalValue());
         existingOrder.setStatus(orderDetails.getStatus());
         existingOrder.setOrderDateUpdated(LocalDateTime.now());
-        Order updatedOrder = orderRepository.save(existingOrder);
+        Order updatedOrder = null;
+        try {
+            updatedOrder = orderRepository.save(existingOrder);
+        } catch (Exception e) {
+            logger.error("Failed to update order {}, Error: {}", orderDetails.getOrderNumber(), e.getMessage());
+            throw new OrderUpdateException("Failed to update order: " +  orderDetails.getOrderNumber(), e);
+        }
+        logger.info("Order updated successfully: {}", orderDetails.getOrderNumber());
         return convert.orderModelToDTO(updatedOrder);
     }
 
@@ -97,7 +103,11 @@ public class OrderService {
             throw new OrderAlreadyProcessedException(orderNumber);
         }
         order.setStatus(OrderStatus.PROCESSED);
-        orderRepository.save(order);
+        try {
+            orderRepository.save(order);
+        } catch (Exception e) {
+            throw new OrderProcessingException("Failed to update order " + orderNumber, e);
+        }
         logger.info("Order processed successfully: {}", orderNumber);
     }
 }
