@@ -61,7 +61,7 @@ public class OrderResponseAdviceTest {
             orderResponseAdvice.beforeBodyWrite(orderDTO, null, null, null, null, null);
         });
 
-        assertTrue(exception.getMessage().contains(errorMessage));
+        assertTrue(exception.getMessage().contains("Failed to encrypt the order number"));
         verify(cryptography, times(1)).encrypt(plainOrderNumber);
     }
 
