@@ -3,6 +3,7 @@ package vs_fundos.challenge.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
+import vs_fundos.challenge.enums.NotificationType;
 import vs_fundos.challenge.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ public class OrderDTO {
     private String orderNumber;
     private BigDecimal totalValue;
     private OrderStatus status;
+    private NotificationType notificationType;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDateCreated;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

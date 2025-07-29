@@ -12,10 +12,8 @@ import vs_fundos.challenge.enums.OrderStatus;
 import vs_fundos.challenge.exception.JsonConvertionException;
 import vs_fundos.challenge.model.Order;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static net.bytebuddy.matcher.ElementMatchers.any;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

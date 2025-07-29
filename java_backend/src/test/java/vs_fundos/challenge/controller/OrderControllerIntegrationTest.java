@@ -19,7 +19,7 @@ import vs_fundos.challenge.exception.OrderNotFoundException;
 import vs_fundos.challenge.exception.OrderUpdateException;
 import vs_fundos.challenge.exception.ResponseEncryptionException;
 import vs_fundos.challenge.interceptor.OrderInterceptor;
-import vs_fundos.challenge.service.OrderService;
+import vs_fundos.challenge.service.impl.OrderServiceImpl;
 import vs_fundos.challenge.util.Cryptography;
 
 import java.math.BigDecimal;
@@ -46,7 +46,7 @@ public class OrderControllerIntegrationTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private OrderService orderService;
+    private OrderServiceImpl orderServiceImpl;
 
     @MockitoBean
     private Cryptography cryptography;
@@ -70,7 +70,7 @@ public class OrderControllerIntegrationTest {
     class GetOrderByIdTests {
         @Test
         void getOrderById_whenOrderExists_shouldReturn200AndEncryptedDTO() throws Exception {
-            when(orderService.getOrderById(1L)).thenReturn(sampleOrderDTO);
+            when(orderServiceImpl.getOrderById(1L)).thenReturn(sampleOrderDTO);
 
             ResultActions result = mockMvc.perform(get(BASE_URL + "/1")
                     .contentType(MediaType.APPLICATION_JSON));
@@ -84,7 +84,7 @@ public class OrderControllerIntegrationTest {
         @Test
         void getOrderById_whenOrderNotFound_shouldReturn404() throws Exception {
             long nonExistentId = 99L;
-            when(orderService.getOrderById(nonExistentId)).thenThrow(new OrderNotFoundException(nonExistentId));
+            when(orderServiceImpl.getOrderById(nonExistentId)).thenThrow(new OrderNotFoundException(nonExistentId));
 
             ResultActions result = mockMvc.perform(get(BASE_URL + "/" + nonExistentId)
                     .contentType(MediaType.APPLICATION_JSON));
@@ -97,7 +97,7 @@ public class OrderControllerIntegrationTest {
         @Test
         void getOrderById_whenEncryptionFails_shouldReturn500() throws Exception {
             String errorMessage = "Failed to encrypt the order number: " + ORIGINAL_ORDER_NUMBER;
-            when(orderService.getOrderById(1L)).thenReturn(sampleOrderDTO);
+            when(orderServiceImpl.getOrderById(1L)).thenReturn(sampleOrderDTO);
             when(cryptography.encrypt(anyString()))
                     .thenThrow(new ResponseEncryptionException(errorMessage, new RuntimeException("AES error")));
 
@@ -116,7 +116,7 @@ public class OrderControllerIntegrationTest {
         @Test
         @DisplayName("Should return 201 Created with encrypted OrderDTO for a valid request")
         void createOrder_whenValidRequest_shouldReturn201AndEncryptedDTO() throws Exception {
-            when(orderService.createOrder(any(OrderDTO.class))).thenReturn(sampleOrderDTO);
+            when(orderServiceImpl.createOrder(any(OrderDTO.class))).thenReturn(sampleOrderDTO);
 
             ResultActions result = mockMvc.perform(post(BASE_URL + "/")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -142,7 +142,7 @@ public class OrderControllerIntegrationTest {
         @Test
         void createOrder_whenCreationFails_shouldReturn500() throws Exception {
             String errorMessage = "Failed to save";
-            when(orderService.createOrder(any(OrderDTO.class)))
+            when(orderServiceImpl.createOrder(any(OrderDTO.class)))
                     .thenThrow(new OrderCreationException(errorMessage, new RuntimeException()));
 
             ResultActions result = mockMvc.perform(post(BASE_URL + "/")
@@ -163,7 +163,7 @@ public class OrderControllerIntegrationTest {
             OrderDTO updateDetails = OrderDTO.builder().totalValue(new BigDecimal("250.50")).build();
             OrderDTO updatedOrder = sampleOrderDTO;
             updatedOrder.setTotalValue(updateDetails.getTotalValue());
-            when(orderService.updateById(eq(1L), any(OrderDTO.class))).thenReturn(updatedOrder);
+            when(orderServiceImpl.updateById(eq(1L), any(OrderDTO.class))).thenReturn(updatedOrder);
 
             ResultActions result = mockMvc.perform(put(BASE_URL + "/1")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -179,7 +179,7 @@ public class OrderControllerIntegrationTest {
         void updateOrder_whenOrderNotFound_shouldReturn404() throws Exception {
             long nonExistentId = 99L;
             OrderDTO updateDetails = OrderDTO.builder().totalValue(new BigDecimal("250.50")).build();
-            when(orderService.updateById(eq(nonExistentId), any(OrderDTO.class)))
+            when(orderServiceImpl.updateById(eq(nonExistentId), any(OrderDTO.class)))
                     .thenThrow(new OrderNotFoundException(nonExistentId));
 
             ResultActions result = mockMvc.perform(put(BASE_URL + "/" + nonExistentId)
@@ -195,7 +195,7 @@ public class OrderControllerIntegrationTest {
         void updateOrder_whenUpdateFails_shouldReturn500() throws Exception {
             String errorMessage = "Failed to update";
             OrderDTO updateDetails = OrderDTO.builder().totalValue(new BigDecimal("250.50")).build();
-            when(orderService.updateById(eq(1L), any(OrderDTO.class)))
+            when(orderServiceImpl.updateById(eq(1L), any(OrderDTO.class)))
                     .thenThrow(new OrderUpdateException(errorMessage, new RuntimeException()));
 
             ResultActions result = mockMvc.perform(put(BASE_URL + "/1")
@@ -213,7 +213,7 @@ public class OrderControllerIntegrationTest {
     class CreateRandomOrderTests {
         @Test
         void createRandomOrder_whenTokenIsValid_shouldReturn201AndEncryptedDTO() throws Exception {
-            when(orderService.createRandomOrder()).thenReturn(sampleOrderDTO);
+            when(orderServiceImpl.createRandomOrder()).thenReturn(sampleOrderDTO);
 
             ResultActions result = mockMvc.perform(post(BASE_URL + "/random")
                     .header(TOKEN_HEADER, TOKEN_VALUE)

@@ -2,13 +2,12 @@ package vs_fundos.challenge.util;
 
 import org.springframework.stereotype.Component;
 import vs_fundos.challenge.dto.OrderDTO;
-import org.springframework.stereotype.Service;
+import vs_fundos.challenge.enums.NotificationType;
 import vs_fundos.challenge.enums.OrderStatus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Random;
 
 @Component
@@ -20,6 +19,7 @@ public class OrderFactory {
                 .status(OrderStatus.UNPROCESSED)
                 .orderDateCreated(LocalDateTime.now())
                 .orderDateUpdated(LocalDateTime.now())
+                .notificationType(generateNotificationType())
                 .build();
     }
 
@@ -30,5 +30,12 @@ public class OrderFactory {
     private static BigDecimal generateTotalValue() {
         double value = (Math.random() * 100) + 1;
         return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private NotificationType generateNotificationType() {
+        NotificationType[] allTypes = NotificationType.values();
+        Random random = new Random();
+        int randomIndex = random.nextInt(allTypes.length);
+        return allTypes[randomIndex];
     }
 }
