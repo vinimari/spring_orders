@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import vs_fundos.challenge.dto.OrderDTO;
-import vs_fundos.challenge.service.OrderProducerService;
+import vs_fundos.challenge.producer.OrderProducerService;
 import vs_fundos.challenge.util.Convert;
 
 import static org.mockito.Mockito.*;

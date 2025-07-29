@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import vs_fundos.challenge.service.OrderProducerService;
+import vs_fundos.challenge.producer.OrderProducerService;
 import vs_fundos.challenge.util.Convert;
 
 @Component

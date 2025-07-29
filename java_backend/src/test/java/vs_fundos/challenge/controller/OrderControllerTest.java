@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import vs_fundos.challenge.dto.OrderDTO;
 import vs_fundos.challenge.enums.OrderStatus;
 import vs_fundos.challenge.exception.OrderNotFoundException;
-import vs_fundos.challenge.service.OrderService;
+import vs_fundos.challenge.service.impl.OrderServiceImpl;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class OrderControllerTest {
     @Mock
-    private OrderService orderService;
+    private OrderServiceImpl orderServiceImpl;
     @InjectMocks
     private OrderController orderController;
 
@@ -29,37 +29,37 @@ public class OrderControllerTest {
     void getOrder_shouldReturnOkStatusAndOrderDTO_whenServiceSucceeds() {
         Long orderId = 1L;
         OrderDTO mockedOrder = OrderDTO.builder().orderNumber("ORDER-01").build();
-        when(orderService.getOrderById(orderId)).thenReturn(mockedOrder);
+        when(orderServiceImpl.getOrderById(orderId)).thenReturn(mockedOrder);
 
         ResponseEntity<OrderDTO> responseEntity = orderController.getOrderById(orderId);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(mockedOrder, responseEntity.getBody());
-        verify(orderService, times(1)).getOrderById(orderId);
+        verify(orderServiceImpl, times(1)).getOrderById(orderId);
     }
 
     @Test
     void getOrder_shouldPropagateOrderNotFoundException_whenOrderDoesNotExist() {
         Long orderNonExistentId = 1L;
         OrderDTO orderDetails = OrderDTO.builder().orderNumber("ORDER-01").build();
-        doThrow(new OrderNotFoundException(orderNonExistentId)).when(orderService).getOrderById(orderNonExistentId);
+        doThrow(new OrderNotFoundException(orderNonExistentId)).when(orderServiceImpl).getOrderById(orderNonExistentId);
 
         OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> orderController.getOrderById(orderNonExistentId));
 
         assertEquals("Order not found with ID: " + orderNonExistentId, thrown.getMessage());
-        verify(orderService, times(1)).getOrderById(eq(orderNonExistentId));
+        verify(orderServiceImpl, times(1)).getOrderById(eq(orderNonExistentId));
     }
 
     @Test
     void createOrder_shouldReturnCreatedStatusAndOrderDTO_whenServiceSucceeds() {
         OrderDTO expectedOrderDTO = OrderDTO.builder().orderNumber("ORDER-1").build();
-        when(orderService.createOrder(expectedOrderDTO)).thenReturn(expectedOrderDTO);
+        when(orderServiceImpl.createOrder(expectedOrderDTO)).thenReturn(expectedOrderDTO);
 
         ResponseEntity<OrderDTO> responseEntity = orderController.createOrder(expectedOrderDTO);
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertEquals(expectedOrderDTO, responseEntity.getBody());
-        verify(orderService, times(1)).createOrder(expectedOrderDTO);
+        verify(orderServiceImpl, times(1)).createOrder(expectedOrderDTO);
     }
 
     @Test
@@ -69,14 +69,14 @@ public class OrderControllerTest {
                 .build();
 
         String errorMessage = "Simulated database error during order creation";
-        doThrow(new RuntimeException(errorMessage)).when(orderService).createOrder(any(OrderDTO.class));
+        doThrow(new RuntimeException(errorMessage)).when(orderServiceImpl).createOrder(any(OrderDTO.class));
 
         RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
             orderController.createOrder(inputOrderDTO);
         });
 
         assertEquals(errorMessage, thrown.getMessage());
-        verify(orderService, times(1)).createOrder(inputOrderDTO);
+        verify(orderServiceImpl, times(1)).createOrder(inputOrderDTO);
     }
 
     @Test
@@ -92,13 +92,13 @@ public class OrderControllerTest {
                 .status(OrderStatus.PROCESSED)
                 .orderDateUpdated(LocalDateTime.MIN)
                 .build();
-        when(orderService.updateById(orderId, orderDetails)).thenReturn(updatedOrder);
+        when(orderServiceImpl.updateById(orderId, orderDetails)).thenReturn(updatedOrder);
 
         ResponseEntity<OrderDTO> responseEntity = orderController.updateOrder(orderId, orderDetails);
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(updatedOrder, responseEntity.getBody());
-        verify(orderService, times(1)).updateById(orderId, updatedOrder);
+        verify(orderServiceImpl, times(1)).updateById(orderId, updatedOrder);
     }
 
     @Test
@@ -111,36 +111,36 @@ public class OrderControllerTest {
                 .orderDateUpdated(LocalDateTime.MIN)
                 .build();
         doThrow(new OrderNotFoundException(orderNonExistentId))
-                .when(orderService).updateById(eq(orderNonExistentId), any(OrderDTO.class));
+                .when(orderServiceImpl).updateById(eq(orderNonExistentId), any(OrderDTO.class));
 
         OrderNotFoundException thrown = assertThrows(OrderNotFoundException.class, () -> {
             orderController.updateOrder(orderNonExistentId, orderDetails);
         });
 
         assertEquals("Order not found with ID: " + orderNonExistentId, thrown.getMessage());
-        verify(orderService, times(1)).updateById(eq(orderNonExistentId), eq(orderDetails));
+        verify(orderServiceImpl, times(1)).updateById(eq(orderNonExistentId), eq(orderDetails));
     }
 
     @Test
     void createRandomOrder_shouldReturnCreatedStatusAndOrderDTO_whenServiceSucceeds() {
         OrderDTO expectedOrderDTO = OrderDTO.builder().orderNumber("ORDER-1").build();
-        when(orderService.createRandomOrder()).thenReturn(expectedOrderDTO);
+        when(orderServiceImpl.createRandomOrder()).thenReturn(expectedOrderDTO);
 
         ResponseEntity<OrderDTO> responseEntity = orderController.createRandomOrder();
 
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         assertEquals(expectedOrderDTO, responseEntity.getBody());
-        verify(orderService, times(1)).createRandomOrder();
+        verify(orderServiceImpl, times(1)).createRandomOrder();
     }
     @Test
     void createRandomOrder_shouldPropagateException_whenServiceThrowsException() {
-        doThrow(new RuntimeException("Simulated service error")).when(orderService).createRandomOrder();
+        doThrow(new RuntimeException("Simulated service error")).when(orderServiceImpl).createRandomOrder();
 
         RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
             orderController.createRandomOrder();
         });
 
-        verify(orderService, times(1)).createRandomOrder();
+        verify(orderServiceImpl, times(1)).createRandomOrder();
     }
 
 }

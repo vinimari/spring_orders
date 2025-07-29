@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.LastModifiedDate;
+import vs_fundos.challenge.enums.NotificationType;
 import vs_fundos.challenge.enums.OrderStatus;
 
 import java.math.BigDecimal;
@@ -34,6 +35,10 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(nullable = true)
     private OrderStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private NotificationType notificationType;
 }
 
 
