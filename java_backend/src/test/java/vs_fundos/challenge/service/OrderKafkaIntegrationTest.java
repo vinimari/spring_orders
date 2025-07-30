@@ -64,33 +64,11 @@ public class OrderKafkaIntegrationTest {
     @Test
     void shouldSendAndReceiveMessageSuccessfully() {
         String expectedOrderNumber = "ORDER-01";
-        OrderDTO orderDTO = OrderDTO.builder().orderNumber(expectedOrderNumber).build();
-        String messagePayload = convert.objectToJson(orderDTO);
+        OrderDTO messagePayload = OrderDTO.builder().orderNumber(expectedOrderNumber).build();
 
         producerService.sendMessage(messagePayload);
 
         verify(orderProcessingService, timeout(5000)).processOrder(expectedOrderNumber);
-    }
-
-    @Test
-    void shouldNotProcessMalformedMessage() {
-        String malformedMessage = "{\"orderNumber\": \"ORDER-02\", \"status\": ";
-        producerService.sendMessage(malformedMessage);
-
-        await().pollDelay(5, TimeUnit.SECONDS).until(() -> true);
-
-        verify(orderProcessingService, never()).processOrder(Mockito.anyString());
-    }
-
-    @Test
-    void shouldThrowJsonConvertionExceptionForMalformedMessage() {
-        String malformedMessage = "{\"orderNumber\": \"ORDER-02\", \"status\": ";
-
-        JsonConvertionException thrown = assertThrows(JsonConvertionException.class, () -> {
-            orderConsumerService.listen(malformedMessage);
-        });
-
-        assertTrue(thrown.getMessage().contains("Error converting JSON to DTO: "));
     }
 
     @ParameterizedTest
@@ -98,8 +76,7 @@ public class OrderKafkaIntegrationTest {
     void shouldProcessMultipleMessagesSuccessfully(String orderNumber) {
         OrderDTO order = OrderDTO.builder().orderNumber(orderNumber).build();
 
-        String payload = convert.objectToJson(order);
-        producerService.sendMessage(payload);
+        producerService.sendMessage(order);
 
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             verify(orderProcessingService, times(1)).processOrder(orderNumber);

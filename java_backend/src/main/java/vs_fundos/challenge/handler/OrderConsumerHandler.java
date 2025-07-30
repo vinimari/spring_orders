@@ -1,5 +1,7 @@
 package vs_fundos.challenge.handler;
 
+import vs_fundos.challenge.dto.OrderDTO;
+
 public interface OrderConsumerHandler {
-    void handleMessage(String message);
+    void handleMessage(OrderDTO orderDTO);
 }

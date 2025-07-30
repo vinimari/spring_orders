@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
+import vs_fundos.challenge.dto.OrderDTO;
 import vs_fundos.challenge.producer.impl.KafkaOrderProducerServiceImpl;
 
 import java.util.concurrent.CompletableFuture;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class KafkaOrderProducerServiceImplTest {
     @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, OrderDTO> kafkaTemplate;
     @InjectMocks
     private KafkaOrderProducerServiceImpl kafkaOrderProducerServiceImpl;
     private final String TEST_TOPIC_NAME = "test-topic";
@@ -40,7 +41,7 @@ public class KafkaOrderProducerServiceImplTest {
     }
     @Test
     void shouldSendMessageSuccessfully() {
-        String message = "test message";
+        OrderDTO message = OrderDTO.builder().orderNumber("ORDER-123").build();
         // O offset é uma posição sequencial imutável de um registro dentro de uma partição
         long offset = 12345L;
         // Unidade de paralelismo; um tópico pode ter uma ou mais partições.
@@ -50,23 +51,23 @@ public class KafkaOrderProducerServiceImplTest {
         // RecordMetadata contém os metadados de um registro que foi produzido com sucesso (tópico, partição, offset, timestamp).
         RecordMetadata recordMetadata = new RecordMetadata(topicPartition, offset, 0, System.currentTimeMillis(), 0L, 0, 0);
         // ProducerRecord representa um registro (chave-valor) a ser enviado para um tópico específico no Kafka.
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TEST_TOPIC_NAME, message);
+        ProducerRecord<String, OrderDTO> producerRecord = new ProducerRecord<>(TEST_TOPIC_NAME, message);
         // SendResult encapsula o ProducerRecord original e o RecordMetadata retornado após o envio bem-sucedido para o Kafka.
-        SendResult<String, String> sendResult = new SendResult<>(producerRecord, recordMetadata);
+        SendResult<String, OrderDTO> sendResult = new SendResult<>(producerRecord, recordMetadata);
         // No contexto do Kafka, o método 'send' do KafkaTemplate retorna um CompletableFuture que será completado com o SendResult.
-        CompletableFuture<SendResult<String, String>> future = CompletableFuture.completedFuture(sendResult);
-        when(kafkaTemplate.send(anyString(), anyString())).thenReturn(future);
+        CompletableFuture<SendResult<String, OrderDTO>> future = CompletableFuture.completedFuture(sendResult);
+        when(kafkaTemplate.send(anyString(), any(OrderDTO.class))).thenReturn(future);
         assertDoesNotThrow(() -> kafkaOrderProducerServiceImpl.sendMessage(message));
         verify(kafkaTemplate, times(1)).send(TEST_TOPIC_NAME, message);
     }
 
     @Test
     void shouldHandleSendMessageFailure() {
-        String message = "test message";
+        OrderDTO message = OrderDTO.builder().orderNumber("ORDER-123").build();
         String errorMessage = "Failed to send message";
-        CompletableFuture<SendResult<String, String>> future = new CompletableFuture<>();
+        CompletableFuture<SendResult<String, OrderDTO>> future = new CompletableFuture<>();
         future.completeExceptionally(new RuntimeException(errorMessage));
-        when(kafkaTemplate.send(anyString(), anyString())).thenReturn(future);
+        when(kafkaTemplate.send(anyString(), any(OrderDTO.class))).thenReturn(future);
         assertDoesNotThrow(() -> kafkaOrderProducerServiceImpl.sendMessage(message));
         verify(kafkaTemplate, times(1)).send(TEST_TOPIC_NAME, message);
     }

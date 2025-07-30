@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import vs_fundos.challenge.consumer.OrderConsumerService;
+import vs_fundos.challenge.dto.OrderDTO;
 import vs_fundos.challenge.handler.OrderConsumerHandler;
 
 @Service
@@ -15,7 +16,8 @@ public class KafkaOrderConsumerServiceImpl implements OrderConsumerService {
     private final OrderConsumerHandler orderConsumerHandler;
 
     @KafkaListener(topics = "${kafka.topic.name}")
-    public void listen(String message) {
-        orderConsumerHandler.handleMessage(message);
+    public void listen(OrderDTO orderDTO) {
+        logger.info("Listened order number for handle: {}", orderDTO.getOrderNumber());
+        orderConsumerHandler.handleMessage(orderDTO);
     }
 }

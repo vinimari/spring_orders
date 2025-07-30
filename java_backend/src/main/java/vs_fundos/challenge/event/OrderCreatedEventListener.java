@@ -19,7 +19,6 @@ public class OrderCreatedEventListener {
     @EventListener
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderCreated(OrderCreatedEvent event) {
-        String message = convert.objectToJson(event.getOrderDTO());
-        orderProducerService.sendMessage(message);
+        orderProducerService.sendMessage(event.getOrderDTO());
     }
 }

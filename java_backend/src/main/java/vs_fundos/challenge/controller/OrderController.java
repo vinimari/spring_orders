@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import vs_fundos.challenge.service.OrderService;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/order")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
