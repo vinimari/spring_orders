@@ -13,6 +13,6 @@ public class AppConfig implements WebMvcConfigurer  {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(orderInterceptor).addPathPatterns("/orders/random");
+        registry.addInterceptor(orderInterceptor).addPathPatterns("/order/random");
     }
 }

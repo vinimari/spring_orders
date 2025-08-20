@@ -27,8 +27,8 @@ public class NotificationDispatcherServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        when(emailServiceMock.getStrategy()).thenReturn(NotificationType.EMAIL);
-        when(smsServiceMock.getStrategy()).thenReturn(NotificationType.SMS);
+        lenient().when(emailServiceMock.getStrategy()).thenReturn(NotificationType.EMAIL);
+        lenient().when(smsServiceMock.getStrategy()).thenReturn(NotificationType.SMS);
 
         List<NotificationService> services = List.of(emailServiceMock, smsServiceMock);
         notificationDispatcher = new NotificationDispatcherServiceImpl(services);
@@ -36,7 +36,7 @@ public class NotificationDispatcherServiceImplTest {
 
     @Test
     void dispatch_whenTypeIsAll_shouldCallAllServices() {
-        String message = "Mensagem para todos";
+        String message = "Message for all";
 
         notificationDispatcher.dispatch(NotificationType.ALL, message);
 
@@ -46,7 +46,7 @@ public class NotificationDispatcherServiceImplTest {
 
         @Test
         void dispatch_whenTypeIsEmail_shouldCallOnlyEmailService() {
-            String message = "Mensagem de e-mail";
+            String message = "E-mail message";
 
             notificationDispatcher.dispatch(NotificationType.EMAIL, message);
 
@@ -56,7 +56,7 @@ public class NotificationDispatcherServiceImplTest {
 
         @Test
         void dispatch_whenTypeIsSms_shouldCallOnlySmsService() {
-            String message = "Mensagem de SMS";
+            String message = "SMS Message";
 
             notificationDispatcher.dispatch(NotificationType.SMS, message);
 
@@ -68,7 +68,7 @@ public class NotificationDispatcherServiceImplTest {
         void dispatch_whenStrategyNotFound_shouldThrowException() {
             List<NotificationService> incompleteServices = List.of(emailServiceMock);
             NotificationDispatcherServiceImpl dispatcherWithMissingStrategy = new NotificationDispatcherServiceImpl(incompleteServices);
-            String message = "Esta mensagem não deve ser enviada";
+            String message = "Should not be send message";
 
             assertThrows(StrategyNotFoundException.class, () -> {
                 dispatcherWithMissingStrategy.dispatch(NotificationType.SMS, message);

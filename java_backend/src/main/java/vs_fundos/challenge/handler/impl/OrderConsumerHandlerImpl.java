@@ -20,13 +20,10 @@ public class OrderConsumerHandlerImpl implements OrderConsumerHandler {
     private final ObjectMapper objectMapper;
     private final NotificationDispatcherService notificationDispatcherService;
 
-   public void handleMessage(String message) {
+   public void handleMessage(OrderDTO orderDTO) {
        try {
-           OrderDTO orderDTO = objectMapper.readValue(message, OrderDTO.class);
            orderProcessingService.processOrder(orderDTO.getOrderNumber());
-           notificationDispatcherService.dispatch(orderDTO.getNotificationType(), "Your order with number :" + orderDTO.getOrderNumber() + " has been processed successfully!");
-       } catch (JsonProcessingException e) {
-           throw new JsonConvertionException("Error converting JSON to DTO: ", e);
+           notificationDispatcherService.dispatch(orderDTO.getNotificationType(), "Your order with number: " + orderDTO.getOrderNumber() + " has been processed successfully!");
        } catch (OrderNotFoundException | OrderAlreadyProcessedException | OrderProcessingException e) {
            logger.error("A business exception occurred while processing the message: {}", e.getMessage());
            throw new KafkaProcessingException("Failed to process order due to a business rule. ", e);

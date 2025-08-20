@@ -22,19 +22,16 @@ public class OrderCreatedEventListenerTest {
     private OrderCreatedEventListener orderCreatedEventListener;
 
     @Test
-    void handleOrderCreated_shouldConvertAndSendMessage() {
+    void handleOrderCreated_shouldSendMessage() {
         OrderDTO orderDTO = OrderDTO.builder()
                 .orderNumber("ORDER-O1")
                 .build();
         OrderCreatedEvent event = new OrderCreatedEvent(orderDTO);
-        String expectedJsonMessage = "{\"orderNumber\":\"ORDER-01\"}";
-        when(convert.objectToJson(orderDTO)).thenReturn(expectedJsonMessage);
 
         orderCreatedEventListener.handleOrderCreated(event);
 
-        verify(convert, times(1)).objectToJson(orderDTO);
-        verify(orderProducerService, times(1)).sendMessage(expectedJsonMessage);
-        verifyNoMoreInteractions(convert, orderProducerService);
+        verify(orderProducerService, times(1)).sendMessage(orderDTO);
+        verifyNoMoreInteractions(orderProducerService);
     }
 
 }

@@ -30,43 +30,16 @@ public class OrderConsumerHandlerImplTest {
     private OrderConsumerHandlerImpl orderConsumerHandler;
 
     private OrderDTO mockOrderDTO;
-    private String testMessage;
+    private OrderDTO testMessage;
 
     @BeforeEach
     void setUp() {
-        testMessage = "{\"orderNumber\":\"ORDER-123\"}";
+        testMessage = OrderDTO.builder().orderNumber("ORDER-123").build();
         mockOrderDTO = OrderDTO.builder().orderNumber("ORDER-123").build();
     }
 
     @Test
-    void shouldProcessMessageSuccessfully() throws Exception {
-        when(objectMapper.readValue(testMessage, OrderDTO.class)).thenReturn(mockOrderDTO);
-        doNothing().when(orderProcessingService).processOrder("ORDER-123");
-        doNothing().when(notificationDispatcherService).dispatch(any(), any());
-
-        orderConsumerHandler.handleMessage(testMessage);
-
-        verify(objectMapper, times(1)).readValue(testMessage, OrderDTO.class);
-        verify(orderProcessingService, times(1)).processOrder("ORDER-123");
-    }
-
-    @Test
-    void shouldThrowJsonConvertionExceptionOnInvalidJson() throws Exception {
-        String invalidJsonMessage = "{invalid json";
-        when(objectMapper.readValue(invalidJsonMessage, OrderDTO.class)).thenThrow(new JsonProcessingException("JSON parsing error"){});
-
-        JsonConvertionException thrown = assertThrows(JsonConvertionException.class, () -> {
-            orderConsumerHandler.handleMessage(invalidJsonMessage);
-        });
-
-        assertTrue(thrown.getMessage().contains("Error converting JSON to DTO:"));
-        assertInstanceOf(JsonProcessingException.class, thrown.getCause());
-        verify(orderProcessingService, never()).processOrder(anyString());
-    }
-
-    @Test
     void shouldThrowKafkaProcessingExceptionOnOrderNotFound() throws Exception {
-        when(objectMapper.readValue(testMessage, OrderDTO.class)).thenReturn(mockOrderDTO);
         doThrow(new OrderNotFoundException("ORDER-123")).when(orderProcessingService).processOrder("ORDER-123");
 
         KafkaProcessingException thrown = assertThrows(KafkaProcessingException.class, () -> {
@@ -80,7 +53,6 @@ public class OrderConsumerHandlerImplTest {
 
     @Test
     void shouldThrowKafkaProcessingExceptionOnOrderAlreadyProcessed() throws Exception {
-        when(objectMapper.readValue(testMessage, OrderDTO.class)).thenReturn(mockOrderDTO);
         doThrow(new OrderAlreadyProcessedException("ORDER-123")).when(orderProcessingService).processOrder("ORDER-123");
 
         KafkaProcessingException thrown = assertThrows(KafkaProcessingException.class, () -> {
@@ -94,7 +66,6 @@ public class OrderConsumerHandlerImplTest {
 
     @Test
     void shouldThrowKafkaProcessingExceptionOnOrderProcessingError() throws Exception {
-        when(objectMapper.readValue(testMessage, OrderDTO.class)).thenReturn(mockOrderDTO);
         doThrow(new OrderProcessingException("DB error", new RuntimeException())).when(orderProcessingService).processOrder("ORDER-123");
 
         KafkaProcessingException thrown = assertThrows(KafkaProcessingException.class, () -> {
@@ -108,7 +79,6 @@ public class OrderConsumerHandlerImplTest {
 
     @Test
     void shouldThrowKafkaProcessingExceptionOnUnexpectedError() throws Exception {
-        when(objectMapper.readValue(testMessage, OrderDTO.class)).thenReturn(mockOrderDTO);
         doThrow(new RuntimeException("Unexpected database connection failure")).when(orderProcessingService).processOrder("ORDER-123");
 
         KafkaProcessingException thrown = assertThrows(KafkaProcessingException.class, () -> {

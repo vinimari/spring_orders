@@ -52,7 +52,7 @@ public class OrderServiceImpl implements OrderService {
         }
         logger.info("Random order created successfully: {}", orderDTO.getOrderNumber());
         eventPublisher.publishEvent(new OrderCreatedEvent(orderDTO));
-        return orderDTO;
+        return orderDTO.toBuilder().build();
     }
 
     @Transactional

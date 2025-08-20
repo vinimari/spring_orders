@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(OrderController.class)
 @Import({OrderInterceptor.class, OrderResponseAdvice.class})
 public class OrderControllerIntegrationTest {
-    private static final String BASE_URL = "/orders";
+    private static final String BASE_URL = "/order";
     private static final String TOKEN_HEADER = "token";
     private static final String TOKEN_VALUE = "token_value";
     private static final String ENCRYPTED_ORDER_NUMBER = "ENCRYPTED-ORDER-XYZ";

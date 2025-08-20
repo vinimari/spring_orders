@@ -1,8 +1,10 @@
 package vs_fundos.challenge.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import vs_fundos.challenge.enums.NotificationType;
 import vs_fundos.challenge.enums.OrderStatus;
 
@@ -10,7 +12,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderDTO {
     private String orderNumber;
     private BigDecimal totalValue;
